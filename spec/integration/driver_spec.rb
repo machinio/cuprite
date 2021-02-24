@@ -1140,6 +1140,23 @@ module Capybara::Cuprite
         end
       end
 
+      it "continues to other intercepted request callbacks if URL is not blacklisted" do
+        @driver.browser.url_blacklist = ["unwanted"]
+
+        @driver.browser.on(:request) do |request, index, total|
+          if request.match?(/simple/)
+            request.respond(body: 'Intercepted')
+          else
+            request.continue
+          end
+        end
+
+        @session.visit "/cuprite/simple"
+
+        expect(@session.status_code).to eq(200)
+        expect(@session).to have_content("Intercepted")
+      end
+
       it "supports wildcards" do
         @driver.browser.url_blacklist = ["*wanted"]
 
@@ -1188,6 +1205,29 @@ module Capybara::Cuprite
         expect(@session).to have_content("We are loading some wanted action here")
         @session.within_frame "framename" do
           expect(@session).to have_content("We should see this.")
+        end
+        @session.within_frame "unwantedframe" do
+          expect(@session).not_to have_content("We shouldn't see this.")
+        end
+      end
+
+      it "continues to other intercepted request callbacks if URL matches whitelist" do
+        @driver.browser.url_whitelist = ["url_whitelist", "/wanted"]
+
+        @driver.browser.on(:request) do |request, index, total|
+          if request.match?(/wanted/)
+            request.respond(body: 'Intercepted')
+          else
+            request.continue
+          end
+        end
+
+        @session.visit "/cuprite/url_whitelist"
+
+        expect(@session.status_code).to eq(200)
+        expect(@session).to have_content("We are loading some wanted action here")
+        @session.within_frame "framename" do
+          expect(@session).to have_content("Intercepted")
         end
         @session.within_frame "unwantedframe" do
           expect(@session).not_to have_content("We shouldn't see this.")
@@ -1259,6 +1299,24 @@ module Capybara::Cuprite
         session.within_frame "unwantedframe" do
           # make sure non whitelisted urls are blocked
           expect(session).not_to have_content("We shouldn't see this.")
+        end
+      end
+    end
+
+    context "combining resource requests blacklist and whitelist" do
+      it "permits requests that do not match blacklist and match whitelist" do
+        @driver.browser.url_blacklist = ["unwanted"]
+        @driver.browser.url_whitelist = ["url_whitelist", "unwanted"]
+
+        @session.visit "/cuprite/url_whitelist"
+
+        expect(@session.status_code).to eq(200)
+        expect(@session).to have_content("We are loading some wanted action here")
+        @session.within_frame "framename" do
+          expect(@session).to_not have_content("We should see this.")
+        end
+        @session.within_frame "unwantedframe" do
+          expect(@session).not_to have_content("We shouldn't see this.")
         end
       end
     end

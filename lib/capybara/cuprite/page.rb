@@ -135,23 +135,14 @@ module Capybara::Cuprite
                            !Array(@browser.url_blacklist).empty?
 
       on(:request) do |request, index, total|
-        if @browser.url_blacklist && !@browser.url_blacklist.empty?
-          if @browser.url_blacklist.any? { |r| request.match?(r) }
-            request.abort and next
-          else
-            request.continue and next
-          end
-        elsif @browser.url_whitelist && !@browser.url_whitelist.empty?
-          if @browser.url_whitelist.any? { |r| request.match?(r) }
-            request.continue and next
-          else
-            request.abort and next
-          end
-        elsif index + 1 < total
-          # There are other callbacks that may handle this request
-          next
-        else
-          # If there are no callbacks then just continue
+        if @browser.url_blacklist && @browser.url_blacklist.any? { |r| request.match?(r) }
+          request.abort and next
+        elsif @browser.url_whitelist && !@browser.url_whitelist.empty? && @browser.url_whitelist.none? { |r| request.match?(r) }
+          request.abort and next
+        end
+
+        if index + 1 >= total
+          # Continue the request if there are no other callbacks
           request.continue
         end
       end
