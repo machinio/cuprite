@@ -187,6 +187,8 @@ module Capybara::Cuprite
           raise InvalidSelector.new(e.response, method, selector)
         end
         raise
+      rescue Ferrum::NodeNotFoundError => e
+        raise ObsoleteNode.new(self, e.response)
       end
     end
 
