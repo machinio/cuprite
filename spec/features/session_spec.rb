@@ -80,9 +80,37 @@ describe Capybara::Session do
           @session.visit("/cuprite/with_js")
         end
 
-        it "raises a MouseEventFailed error" do
-          expect { @session.click_link("O hai") }
-            .to raise_error(Capybara::Cuprite::MouseEventFailed)
+        context "if on_mouse_event_failed set to warn" do
+          before do
+            @session.driver.browser.on_mouse_event_failed = :silence
+          end
+
+          it "does not warn or raise" do
+            expect(@session.driver.browser).not_to receive(:warn)
+            @session.click_link("O hai")
+          end
+        end
+
+        context "if on_mouse_event_failed set to raise" do
+          before do
+            @session.driver.browser.on_mouse_event_failed = :raise
+          end
+
+          it "raises a MouseEventFailed error" do
+            expect { @session.click_link("O hai") }
+              .to raise_error(Capybara::Cuprite::MouseEventFailed)
+          end
+        end
+
+        context "if on_mouse_event_failed set to warn" do
+          before do
+            @session.driver.browser.on_mouse_event_failed = :warn
+          end
+
+          it "warns insated of raises" do
+            expect(@session.driver.browser).to receive(:warn)
+            @session.click_link("O hai")
+          end
         end
 
         context "and is then brought in" do
@@ -418,6 +446,7 @@ describe Capybara::Session do
 
       context "with #two overlapping #one" do
         before do
+          @session.driver.browser.on_mouse_event_failed = :raise
           @session.execute_script <<-JS
             var two = document.getElementById("two")
             two.style.position = "absolute"
@@ -456,6 +485,7 @@ describe Capybara::Session do
 
       context "with #svg overlapping #one" do
         before do
+          @session.driver.browser.on_mouse_event_failed = :raise
           @session.execute_script <<-JS
             var two = document.getElementById("svg")
             two.style.position = "absolute"

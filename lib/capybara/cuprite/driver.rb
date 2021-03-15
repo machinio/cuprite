@@ -154,6 +154,7 @@ module Capybara::Cuprite
       @paper_size = nil
       browser.url_blacklist = @options[:url_blacklist]
       browser.url_whitelist = @options[:url_whitelist]
+      browser.on_mouse_event_failed = @options[:on_mouse_event_failed]
       browser.reset
       @started = false
     end

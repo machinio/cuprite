@@ -69,6 +69,7 @@ end
 * options `Hash`
   * `:url_blacklist` (Array) - array of strings to match against requested URLs
   * `:url_whitelist` (Array) - array of strings to match against requested URLs
+  * `:on_mouse_event_failed` (Symbol) - any of `:raise`, `:silence`, default `:warn`.
 
 
 ## Debugging

@@ -103,7 +103,7 @@ module Capybara::Cuprite
       evaluate_on(node: node, expression: "_cuprite.mouseEventTest(this, '#{name}', #{x}, #{y})")
       true
     rescue Ferrum::JavaScriptError => e
-      raise MouseEventFailed.new(e.message) if e.class_name == "MouseEventFailed"
+      browser.notify_silenceable_exception(MouseEventFailed.new(e.message)) if e.class_name == "MouseEventFailed"
     end
 
     def switch_to_frame(handle)
@@ -183,7 +183,7 @@ module Capybara::Cuprite
       x, y = node.find_position(**options)
     rescue Ferrum::BrowserError => e
       if e.message == "Could not compute content quads."
-        raise MouseEventFailed.new("MouseEventFailed: click, none, 0, 0")
+        browser.notify_silenceable_exception(MouseEventFailed.new("MouseEventFailed: click, none, 0, 0"))
       else
         raise
       end

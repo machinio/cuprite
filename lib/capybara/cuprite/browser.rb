@@ -10,12 +10,13 @@ module Capybara::Cuprite
                 find_modal accept_confirm dismiss_confirm accept_prompt
                 dismiss_prompt reset_modals] => :page
 
-    attr_reader :url_blacklist, :url_whitelist
+    attr_reader :url_blacklist, :url_whitelist, :on_mouse_event_failed
 
     def initialize(options = nil)
       options ||= {}
       self.url_blacklist = options[:url_blacklist]
       self.url_whitelist = options[:url_whitelist]
+      self.on_mouse_event_failed = options[:on_mouse_event_failed]
 
       super
       @page = false
@@ -44,6 +45,15 @@ module Capybara::Cuprite
     def url_blacklist=(patterns)
       @url_blacklist = prepare_wildcards(patterns)
       page.network.intercept if @client && !@url_blacklist.empty?
+    end
+
+    def on_mouse_event_failed=(setting)
+      setting ||= :warn
+      valid_settings = %i[raise silence warn]
+      if !valid_settings.include?(setting)
+        raise "on_mouse_event_failed config must be one of: #{valid_settings}"
+      end
+      @on_mouse_event_failed = setting
     end
 
     def visit(*args)
@@ -169,6 +179,15 @@ module Capybara::Cuprite
 
     def all_text(node)
       node.text
+    end
+
+    def notify_silenceable_exception(exception)
+      case on_mouse_event_failed
+      when :raise
+        raise exception
+      when :warn
+        warn(exception.message)
+      end
     end
 
     private

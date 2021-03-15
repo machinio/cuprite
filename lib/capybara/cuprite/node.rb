@@ -23,7 +23,7 @@ module Capybara::Cuprite
     rescue Ferrum::BrowserError => e
       case e.message
       when "Cuprite.MouseEventFailed"
-        raise MouseEventFailed.new(self, e.response)
+        browser.notify_silenceable_exception(MouseEventFailed.new(self, e.response))
       else
         raise
       end
